@@ -10,3 +10,7 @@ cd raylib-snake/build
 cmake ..
 ./snake.exe
 ```
+
+# TODO
+- Add food (and score!)
+- Fix buggy controls

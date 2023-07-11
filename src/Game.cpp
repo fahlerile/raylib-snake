@@ -1,97 +1,95 @@
 #include <raylib.h>
+#include "Snake.hpp"
 #include "Game.hpp"
 
 #include <iostream>
 
-Game::Game(Vector2 screen_dimensions, Vector2 start_position)
+Game::Game(Vector2 window_dimensions, Vector2 starting_position, Direction direction)
 {
-    // calculate square size so that there is padding from borders
-    this->square_size = screen_dimensions.y * (1 - 2 * this->y_padding_percent) / this->board_size;
+    Vector2 speed;
+    this->direction = direction;
+    this->window_dimensions = window_dimensions;
 
-    this->offset.x = (screen_dimensions.x - this->board_size * this->square_size) / 2;
-    this->offset.y = screen_dimensions.y * this->y_padding_percent;
+    if (direction == UP)
+        speed = (Vector2) {0.0f, -this->snakepart_size};
+    else if (direction == DOWN)
+        speed = (Vector2) {0.0f, this->snakepart_size};
+    else if (direction == LEFT)
+        speed = (Vector2) {-this->snakepart_size, 0.0f};
+    else  // if RIGHT
+        speed = (Vector2) {this->snakepart_size, 0.0f};
 
-    for (int i = 0; i < this->board_size; i++)
-    {
-        for (int j = 0; j < this->board_size; j++)
-        {
-            this->grid[i][j] = NOTHING;
+    this->snake.push_back(
+        (SnakePart) {
+            (Vector2) {this->snakepart_size, this->snakepart_size},
+            starting_position,
+            speed,
+            this->head_color
         }
-    }
-
-    this->direction = (Direction) GetRandomValue(0, 3);
-    this->head_position = start_position;
-    this->tail_position = start_position;
-}
-
-void Game::render()
-{
-    for (int y = 0; y < this->board_size; y++)
-    {
-        for (int x = 0; x < this->board_size; x++)
-        {
-            if (this->grid[y][x] == NOTHING)
-                DrawRectangle((this->square_size + this->padding) * x + this->offset.x,
-                              (this->square_size + this->padding) * y + this->offset.y,
-                              this->square_size, this->square_size, this->color_nothing);
-
-            else if (this->grid[y][x] == SNAKE)
-                DrawRectangle((this->square_size + this->padding) * x + this->offset.x,
-                              (this->square_size + this->padding) * y + this->offset.y,
-                              this->square_size, this->square_size, this->color_snake);
-
-            else
-                DrawRectangle((this->square_size + this->padding) * x + this->offset.x,
-                              (this->square_size + this->padding) * y + this->offset.y,
-                              this->square_size, this->square_size, this->color_food);
-        }
-    }
-}
-
-void Game::get_input()
-{
-    if (IsKeyPressed(KEY_UP) && this->direction != DOWN)
-        this->direction = UP;
-    else if (IsKeyDown(KEY_DOWN) && this->direction != UP)
-        this->direction = DOWN;
-    if (IsKeyDown(KEY_LEFT) && this->direction != RIGHT)
-        this->direction = LEFT;
-    if (IsKeyDown(KEY_RIGHT) && this->direction != LEFT)
-        this->direction = RIGHT;
+    );
 }
 
 void Game::update()
 {
-    if (this->direction == UP)
+    // input
+    Vector2 new_head_speed {0, 0};
+    if (IsKeyDown(KEY_UP))
     {
-        this->head_position = (Vector2) {this->head_position.x, this->head_position.y - 1};
-        this->grid[(int) this->head_position.y][(int) this->head_position.x] = SNAKE;
-
-        this->grid[(int) this->tail_position.y][(int) this->tail_position.x] = NOTHING;
-        this->tail_position = (Vector2) {this->tail_position.x, this->tail_position.y - 1};
+        this->direction = UP;
+        new_head_speed = (Vector2) {0.0f, -this->snakepart_size};
     }
-    else if (this->direction == DOWN)
+    else if (IsKeyDown(KEY_DOWN))
     {
-        this->head_position = (Vector2) {this->head_position.x, this->head_position.y + 1};
-        this->grid[(int) this->head_position.y][(int) this->head_position.x] = SNAKE;
-
-        this->grid[(int) this->tail_position.y][(int) this->tail_position.x] = NOTHING;
-        this->tail_position = (Vector2) {this->tail_position.x, this->tail_position.y + 1};
+        this->direction = DOWN;
+        new_head_speed = (Vector2) {0.0f, this->snakepart_size};
     }
-    else if (this->direction == LEFT)
+    else if (IsKeyDown(KEY_LEFT))
     {
-        this->head_position = (Vector2) {this->head_position.x - 1, this->head_position.y};
-        this->grid[(int) this->head_position.y][(int) this->head_position.x] = SNAKE;
-
-        this->grid[(int) this->tail_position.y][(int) this->tail_position.x] = NOTHING;
-        this->tail_position = (Vector2) {this->tail_position.x - 1, this->tail_position.y};
+        this->direction = LEFT;
+        new_head_speed = (Vector2) {-this->snakepart_size, 0.0f};
+    }
+    else if (IsKeyDown(KEY_RIGHT))
+    {
+        this->direction = RIGHT;
+        new_head_speed = (Vector2) {this->snakepart_size, 0.0f};
     }
     else
-    {
-        this->head_position = (Vector2) {this->head_position.x + 1, this->head_position.y};
-        this->grid[(int) this->head_position.y][(int) this->head_position.x] = SNAKE;
+        new_head_speed = this->snake[0].speed;
 
-        this->grid[(int) this->tail_position.y][(int) this->tail_position.x] = NOTHING;
-        this->tail_position = (Vector2) {this->tail_position.x + 1, this->tail_position.y};
+    if (this->frame_counter % this->frame_num == 0)
+    {
+        this->snake.insert(this->snake.begin(),
+            (SnakePart) {
+                (Vector2) {this->snakepart_size, this->snakepart_size},
+                (Vector2) {this->snake[0].position.x + this->snake[0].speed.x, this->snake[0].position.y + this->snake[0].speed.y},
+                new_head_speed,
+                this->head_color
+            }
+        );
+        this->snake.pop_back();
+
+        // if new head is out of bounds
+        if (this->snake[0].position.x < 0 || this->snake[0].position.x >= this->window_dimensions.x ||
+            this->snake[0].position.y < 0 || this->snake[0].position.y >= this->window_dimensions.y)
+        {
+            std::cout << "Game Over" << std::endl;
+            exit(0);
+        }
     }
+
+    this->frame_counter++;
+}
+
+void Game::draw()
+{
+    BeginDrawing();
+
+        ClearBackground(WHITE);
+
+        for (auto part : this->snake)
+        {
+            DrawRectangleV(part.position, part.size, part.color);
+        }
+
+    EndDrawing();
 }

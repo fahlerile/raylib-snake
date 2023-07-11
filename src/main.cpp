@@ -3,27 +3,17 @@
 
 int main(void)
 {
-    const Vector2 screen_dimensions {800, 600};
+    const Vector2 window_dimensions {800, 600};
 
-    Game game(screen_dimensions, (Vector2) {20, 20});
-
-    InitWindow(screen_dimensions.x, screen_dimensions.y, "Snake!");
+    InitWindow(window_dimensions.x, window_dimensions.y, "Snake!");
     SetTargetFPS(60);
+
+    Game game(window_dimensions, (Vector2) {100, 100}, RIGHT);
 
     while (!WindowShouldClose())
     {
-        BeginDrawing();
-
-            ClearBackground(WHITE);
-
-            game.get_input();
-            game.update();
-
-            game.render();
-
-        EndDrawing();
-
-        WaitTime(0.5f);
+        game.update();
+        game.draw();
     }
 
     CloseWindow();

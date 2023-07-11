@@ -1,32 +1,24 @@
 #pragma once
-#include <raylib.h>
+#include <vector>
+#include "Snake.hpp"
 
-enum GameElement {NOTHING, SNAKE, FOOD};
 enum Direction {UP, DOWN, LEFT, RIGHT};
 
 class Game
 {
     private:
-        int square_size;
-        Vector2 offset;
+        static const constexpr Color head_color = DARKBLUE;
+        static const int snakepart_size = 25;
 
-        int length = 1;
+        int frame_counter = 0;
+        std::vector<SnakePart> snake;
         Direction direction;
-        Vector2 head_position;
-        Vector2 tail_position;
 
-        static const int board_size = 32;
-        static const int padding = 0;
-        static constexpr const float y_padding_percent = 0.05;  // 5% vertical padding from both sides
-
-        static constexpr const Color color_nothing = BLACK;
-        static constexpr const Color color_snake = WHITE;
-        static constexpr const Color color_food = RED;
+        int frame_num = 10; // per how many frames the snake is going to "walk"
+        Vector2 window_dimensions;
 
     public:
-        GameElement grid[board_size][board_size];
-        Game(Vector2 screen_dimensions, Vector2 start_position);
-        void render();
-        void get_input();
+        Game(Vector2 window_dimensions, Vector2 starting_position, Direction direction);
         void update();
+        void draw();
 };

@@ -8,3 +8,10 @@ struct SnakePart
     Vector2 speed;
     Color color;
 };
+
+struct Food
+{
+    Vector2 size;
+    Vector2 position;
+    Color color;
+};

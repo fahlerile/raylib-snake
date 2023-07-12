@@ -8,7 +8,7 @@ int main(void)
     InitWindow(window_dimensions.x, window_dimensions.y, "Snake!");
     SetTargetFPS(60);
 
-    Game game(window_dimensions, (Vector2) {100, 100}, RIGHT);
+    Game game(window_dimensions);
 
     while (!WindowShouldClose())
     {
